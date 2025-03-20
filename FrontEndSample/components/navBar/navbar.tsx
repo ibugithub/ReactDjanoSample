@@ -13,7 +13,7 @@ export const NavBar = () => {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-              TokenizerV3
+              React+Django
             </Link>
           </div>
 
@@ -25,8 +25,8 @@ export const NavBar = () => {
             <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
               Leaderboard
             </Link>
-            <Link href="/earn-tokens" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
-              Earn Tokens
+            <Link href="/about" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
+              About
             </Link>
             {/* Login Button */}
             <ProfileModal/>
