@@ -1,4 +1,4 @@
-# TokenizerV3Backend
+# ReactDjangoSample
 
 To manage the libraries or packages you've used and installed in your Django project, you can use `pip` (Python's package installer) along with a `requirements.txt` file. Here's how to do it:
 
