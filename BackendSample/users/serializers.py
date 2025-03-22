@@ -30,13 +30,15 @@ class UserSerializer(serializers.ModelSerializer):
     user = User.objects.create_user(
       email=validated_data['email'],
       name=validated_data['name'],
-      password=validated_data['password']
+      password=validated_data['password'],
+      signUp_by='email'
     )
     return user
 
 class ThirdPartyUserSerializer(serializers.Serializer):
   name = serializers.CharField()
   email = serializers.EmailField()
+  signUp_by = serializers.CharField()
   
 class SignInSerializer(serializers.Serializer):
   email = serializers.EmailField()

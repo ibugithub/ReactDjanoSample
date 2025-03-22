@@ -1,12 +1,11 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
-from cloudinary.models import CloudinaryField
 
 class UserManager(BaseUserManager):
-  def create_user(self, email, name, password=None, **extra_fields):
+  def create_user(self, email, name, password=None, signUp_by='Email', **extra_fields):
     if not email:
         raise ValueError('Users must have an email address')
-    user = self.model(email=self.normalize_email(email), name=name)
+    user = self.model(email=self.normalize_email(email), name=name, signUp_by=signUp_by, **extra_fields)
     user.set_password(password)
     user.save(using=self._db)
     return user
@@ -20,8 +19,15 @@ class UserManager(BaseUserManager):
     return user
 
 class User(AbstractBaseUser):
+  SIGNUP_METHODS = [
+    ('email', 'Email'),
+    ('google', 'Google'),
+    ('facebook', 'Facebook'),
+    ('microsoft', 'Microsoft'),
+  ]
   email = models.EmailField(unique=True)
   name = models.CharField(max_length=255)
+  signUp_by = models.CharField(max_length=20, choices=SIGNUP_METHODS, default='email')
   is_verified = models.BooleanField(default=False)
   is_admin = models.BooleanField(default=False)
   is_superuser = models.BooleanField(default=False)

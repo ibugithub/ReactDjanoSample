@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import UserSerializer, SignInSerializer, ListUserSerializer, AccessTokenSerializer, ThirdPartyUserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import generics, permissions
 from .models import User
 import requests
@@ -14,14 +13,21 @@ import os
 import random
 import string
 from users.utils.sendEmail import send_email;
-from rest_framework.permissions import IsAuthenticated
+from userProfile.models import Profile
 
+
+
+def create_profile(user):
+  profile = Profile.objects.create(user=user)
+  profile.save()
+  
 class CreateUser(APIView):
   def post(self, request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
       serializer.save()
       user = serializer.instance
+      create_profile(user)
       verification_token = RefreshToken.for_user(user).access_token
       verification_url = f"{os.environ.get('FRONTEND_BASE_URL')}/accounts/verifyEmail?token={verification_token}"
       send_email(
@@ -79,21 +85,23 @@ class ValidateTokenView(APIView):
 def generate_random_password(length=12):
   characters = string.ascii_letters + string.digits + string.punctuation
   return ''.join(random.choice(characters) for i in range(length))
-  
+
 @api_view(['POST'])
 def handleThrdProvUser(request, user):
   serializer = ThirdPartyUserSerializer(data=user)
   if serializer.is_valid():
-    user_data = serializer.validated_data 
+    user_data = serializer.validated_data
     email = user_data['email']
     name = user_data['name']
+    signUp_by = user_data['signUp_by']
     try:
       user = User.objects.get(email=email)
     except User.DoesNotExist:
       password = generate_random_password()
-      user = User.objects.create_user(email=email, name=name, password=password)
+      user = User.objects.create_user(email=email, name=name, password=password, signUp_by=signUp_by)
       user.is_verified = True
       user.save()
+      create_profile(user)
     refresh = RefreshToken.for_user(user)
     accessToken =  str(refresh.access_token)
     refreshToken = str(refresh)
@@ -149,6 +157,7 @@ def GetGoogleUserInfo(request):
       'name': user_data['name'],
       'email': user_data['email'],
       'picture': user_data['picture'],
+      'signUp_by': 'google'
     }
     return handleThrdProvUser(request._request, user)
   except requests.RequestException as e:
@@ -177,6 +186,7 @@ def GetFBUserInfo(request):
     )
     user_info_response.raise_for_status()
     user = user_info_response.json()
+    user['signUp_by'] = 'facebook'
     return handleThrdProvUser(request._request, user)
   except requests.RequestException as e:
     return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -246,7 +256,8 @@ def GetMsUserInfo(request):
     user_data = user_info_response.json()
     user = {
       'name': user_data['displayName'],
-      'email': user_data['mail']
+      'email': user_data['mail'],
+      'signUp_by': 'microsoft'
     }
     return handleThrdProvUser(request._request, user)
   except requests.RequestException as e:
@@ -333,19 +344,3 @@ def resetPassword(request):
   except Exception as e:
     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
   
-class saveWalletAddress(APIView):
-  authentication_classes = [JWTAuthentication]
-  permission_classes = [IsAuthenticated]
-  
-  def post(self, request):
-    wallet_address = request.data.get('wallet_address')
-    if not wallet_address:
-      return Response({"error": "Wallet address is required"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    try:
-      user = request.user
-      user.wallet_address = wallet_address
-      user.save()
-      return Response({"message": "Wallet address saved successfully"}, status=status.HTTP_200_OK)
-    except Exception as e:
-      return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

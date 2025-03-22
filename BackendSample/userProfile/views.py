@@ -3,16 +3,18 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .serializers import UserProfileSerializer
 from .models import Profile
+from django.core.exceptions import ObjectDoesNotExist
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         try:
             profile = Profile.objects.get(user=request.user)
             serializer = UserProfileSerializer(profile)
             return Response(serializer.data)
-        except Profile.DoesNotExist:
-            return Response({'message': 'Profile not found'}, status=404)
+        except ObjectDoesNotExist as e:
+            return Response({'message': f'Profile not found: {e}'}, status=404)
 
 
 class ChangePasswordView(APIView):
