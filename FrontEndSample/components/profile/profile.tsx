@@ -21,6 +21,7 @@ export const Profile = () => {
       try {
         const response = await protectedRoute.get(url);
         setProfile(response.data);
+        console.log('the response data is', response.data);
       } catch (error) {
         console.error('Failed to fetch profile', error);
       }
@@ -33,13 +34,11 @@ export const Profile = () => {
     setMessage('');
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
     const url = `${backendUrl}/api/profile/changePassword/`;
-
     try {
       const response = await protectedRoute.post(url, {
         old_password: oldPassword,
         new_password: newPassword,
       });
-
       setMessage(response.data.message);
       setOldPassword('');
       setNewPassword('');
@@ -95,46 +94,49 @@ export const Profile = () => {
           >
             Edit Profile
           </Button>
-          <Button
-            onClick={() => setShowPasswordForm(!showPasswordForm)}
-            className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition duration-300"
-          >
-            Change Password
-          </Button>
+          {profile?.user.signUp_by === 'email' && (
+            <Button
+              onClick={() => setShowPasswordForm(!showPasswordForm)}
+              className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition duration-300"
+            >
+              Change Password
+            </Button>
+          )}
         </div>
 
-        {/* Change Password Form */}
-        {showPasswordForm && (
-          <div className="p-6 bg-white shadow-md rounded-lg">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">Change Password</h2>
+        {profile?.user.signUp_by === 'email' && (
+          showPasswordForm && (
+            <div className="p-6 bg-white shadow-md rounded-lg">
+              <h2 className="text-xl font-semibold text-gray-700 mb-4">Change Password</h2>
 
-            <Input
-              type="password"
-              placeholder="Old Password"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-              className="mb-3"
-            />
+              <Input
+                type="password"
+                placeholder="Old Password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                className="mb-3"
+              />
 
-            <Input
-              type="password"
-              placeholder="New Password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="mb-3"
-            />
+              <Input
+                type="password"
+                placeholder="New Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="mb-3"
+              />
 
-            <Button
-              onClick={handleChangePassword}
-              disabled={loading}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-300 w-full"
-            >
-              {loading ? 'Changing...' : 'Submit'}
-            </Button>
-
-            {message && <p className="text-red-500 mt-2">{message}</p>}
-          </div>
-        )}
+              <Button
+                onClick={handleChangePassword}
+                disabled={loading}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-300 w-full"
+              >
+                {loading ? 'Changing...' : 'Submit'}
+              </Button>
+              {message && <p className="text-red-500 mt-2">{message}</p>}
+            </div>
+          )
+        )
+        }
       </div>
     </div>
   );

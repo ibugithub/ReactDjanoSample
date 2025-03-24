@@ -1,5 +1,6 @@
 interface User {
   email: string;
+  signUp_by: "email" | "google" | "facebook" | "microsoft";
 }
 export interface ProfileInterface {
   user: User;
